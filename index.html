@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Proficiency Exam</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and Babel for running JSX in the browser -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { background-color: #f8fafc; }
+        .tab-active { background-color: #2563eb; color: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        /**
+         * Enhanced Icon component for browser-based React without bundlers.
+         * Uses Lucide's createIcons method which is the standard for the browser bundle.
+         */
+        const Icon = ({ name, className }) => {
+            const spanRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (spanRef.current && window.lucide) {
+                    // Convert CamelCase to kebab-case for Lucide attribute matching
+                    const kebabName = name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+                    
+                    // Clear previous content
+                    spanRef.current.innerHTML = '';
+                    
+                    // Create an i element that Lucide will replace
+                    const iconElement = document.createElement('i');
+                    iconElement.setAttribute('data-lucide', kebabName);
+                    if (className) iconElement.className = className;
+                    
+                    spanRef.current.appendChild(iconElement);
+                    
+                    // Initialize the specific icon in this span
+                    window.lucide.createIcons({
+                        nameAttr: 'data-lucide',
+                        attrs: { class: className }
+                    });
+                }
+            }, [name, className]);
+
+            return <span ref={spanRef} className="inline-flex items-center justify-center" />;
+        };
+
+        const App = () => {
+            // --- Exam Data ---
+            const examData = [
+                {
+                    id: 'theory',
+                    title: 'General IT & Office Theory',
+                    icon: 'BookOpen',
+                    questions: [
+                        { id: 1, text: "Which file extension is typically associated with a Microsoft Word document?", options: [".txt", ".docx", ".xlsx", ".pptx"], correct: 1, marks: 5 },
+                        { id: 2, text: "What is the keyboard shortcut to 'Undo' the last action?", options: ["Ctrl + C", "Ctrl + V", "Ctrl + Z", "Ctrl + S"], correct: 2, marks: 5 },
+                        { id: 3, text: "Which tab in the Ribbon contains the 'Print' options in most Office apps?", options: ["Home", "Insert", "File", "Review"], correct: 2, marks: 5 },
+                        { id: 4, text: "What is the main purpose of Microsoft Outlook?", options: ["Database Management", "Email and Calendar", "Photo Editing", "Web Hosting"], correct: 1, marks: 5 },
+                    ]
+                },
+                {
+                    id: 'word',
+                    title: 'Microsoft Word',
+                    icon: 'FileText',
+                    questions: [
+                        { id: 5, text: "To create a 'Table of Contents' automatically, what must you apply to your headings?", options: ["Bold Formatting", "Heading Styles", "Bullet Points", "Hyperlinks"], correct: 1, marks: 8 },
+                        { id: 6, text: "Which feature allows you to send a personalized letter to a large list of recipients?", options: ["Track Changes", "Mail Merge", "Macro Recorder", "Format Painter"], correct: 1, marks: 7 },
+                        { id: 7, text: "Where would you go to change the page orientation from Portrait to Landscape?", options: ["Design Tab", "Layout Tab", "View Tab", "Insert Tab"], correct: 1, marks: 5 },
+                        { id: 8, text: "What is the function of the 'Format Painter'?", options: ["To paint pictures", "To copy formatting from one place to another", "To change the page color", "To check spelling"], correct: 1, marks: 5 },
+                    ]
+                },
+                {
+                    id: 'excel',
+                    title: 'Microsoft Excel',
+                    icon: 'BarChart2',
+                    questions: [
+                        { id: 9, text: "Which formula correctly uses an Absolute Reference?", options: ["=A1+B1", "=$A$1+B1", "=(A1+B1)", "=SUM(A:B)"], correct: 1, marks: 8 },
+                        { id: 10, text: "What does the VLOOKUP function do?", options: ["Calculates the average", "Searches for a value in the first column of a table", "Sums a range of vertical cells", "Creates a chart"], correct: 1, marks: 7 },
+                        { id: 11, text: "Which tool is best for summarizing and analyzing large datasets in Excel?", options: ["Data Validation", "PivotTable", "Conditional Formatting", "Goal Seek"], correct: 1, marks: 10 },
+                        { id: 12, text: "How do you start a formula in Excel?", options: ["@", "#", "=", "/"], correct: 2, marks: 5 },
+                    ]
+                },
+                {
+                    id: 'powerpoint',
+                    title: 'Microsoft PowerPoint',
+                    icon: 'Monitor',
+                    questions: [
+                        { id: 13, text: "Which view allows you to see all your slides as thumbnails to easily reorder them?", options: ["Normal View", "Slide Sorter", "Reading View", "Notes Page"], correct: 1, marks: 5 },
+                        { id: 14, text: "What is a 'Slide Master' used for?", options: ["To present the slideshow", "To set consistent formatting across all slides", "To record audio", "To print handouts"], correct: 1, marks: 10 },
+                        { id: 15, text: "How do you add motion effects to individual elements on a slide?", options: ["Transitions", "Animations", "Design Ideas", "SmartArt"], correct: 1, marks: 5 },
+                        { id: 16, text: "Which key starts a presentation from the beginning?", options: ["F1", "F5", "F10", "Spacebar"], correct: 1, marks: 5 },
+                    ]
+                }
+            ];
+
+            const [activeSheet, setActiveSheet] = React.useState(0);
+            const [studentName, setStudentName] = React.useState('');
+            const [isExamStarted, setIsExamStarted] = React.useState(false);
+            const [isExamFinished, setIsExamFinished] = React.useState(false);
+            const [responses, setResponses] = React.useState({});
+
+            React.useEffect(() => {
+                const initialResponses = {};
+                examData.forEach(sheet => {
+                    sheet.questions.forEach(q => {
+                        initialResponses[q.id] = { selected: null, attempts: 0, locked: false, isCorrect: false };
+                    });
+                });
+                setResponses(initialResponses);
+            }, []);
+
+            const handleAnswerSelection = (question, optionIndex) => {
+                const qId = question.id;
+                const current = responses[qId];
+                if (current.locked) return;
+
+                const isCorrect = optionIndex === question.correct;
+                const newAttempts = current.attempts + 1;
+                const shouldLock = isCorrect || newAttempts >= 3;
+
+                setResponses(prev => ({
+                    ...prev,
+                    [qId]: { selected: optionIndex, attempts: newAttempts, locked: shouldLock, isCorrect: isCorrect }
+                }));
+            };
+
+            const calculateScore = () => {
+                let total = 0;
+                examData.forEach(sheet => {
+                    sheet.questions.forEach(q => {
+                        if (responses[q.id]?.isCorrect) total += q.marks;
+                    });
+                });
+                return total;
+            };
+
+            if (!isExamStarted) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+                            <div className="text-center mb-8">
+                                <div className="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
+                                    <Icon name="Monitor" className="text-white w-8 h-8" />
+                                </div>
+                                <h1 className="text-2xl font-bold text-slate-800">Office Proficiency Exam</h1>
+                                <p className="text-slate-500">Student Portal</p>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                                    <input 
+                                        type="text" 
+                                        className="w-full px-4 py-3 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                        placeholder="e.g. John Doe"
+                                        value={studentName}
+                                        onChange={(e) => setStudentName(e.target.value)}
+                                    />
+                                </div>
+                                <button 
+                                    disabled={!studentName.trim()}
+                                    onClick={() => setIsExamStarted(true)}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-bold py-3 rounded-lg transition-all shadow-md active:scale-95"
+                                >
+                                    Start Examination
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (isExamFinished) {
+                const finalScore = calculateScore();
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4">
+                        <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-10 text-center border border-slate-100">
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${finalScore >= 50 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                <Icon name="Trophy" className="w-10 h-10" />
+                            </div>
+                            <h2 className="text-3xl font-bold text-slate-800">Result for {studentName}</h2>
+                            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100">
+                                    <p className="text-slate-500 uppercase tracking-widest text-xs font-bold">Total Mark</p>
+                                    <p className="text-5xl font-black text-slate-800">{finalScore}<span className="text-2xl text-slate-400">/100</span></p>
+                                </div>
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100 flex flex-col justify-center">
+                                    <p className="text-slate-500 uppercase tracking-widest text-xs font-bold">Status</p>
+                                    <p className={`text-2xl font-bold mt-2 ${finalScore >= 50 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {finalScore >= 50 ? 'PASSED' : 'RETRY NEEDED'}
+                                    </p>
+                                </div>
+                            </div>
+                            <button onClick={() => window.location.reload()} className="mt-8 flex items-center justify-center gap-2 mx-auto text-blue-600 font-bold hover:underline">
+                                <Icon name="RotateCcw" className="w-4 h-4" /> Restart Test
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const currentSheet = examData[activeSheet];
+
+            return (
+                <div className="min-h-screen">
+                    <header className="bg-white border-b border-slate-200 sticky top-0 z-10 px-4 md:px-8 py-4 flex justify-between items-center shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-blue-600 p-2 rounded text-white shadow-sm">
+                                <Icon name="Monitor" className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h2 className="font-bold text-slate-800 leading-none">Office Skills Exam</h2>
+                                <p className="text-xs text-slate-500 mt-1">{studentName}</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setIsExamFinished(true)} 
+                            className="bg-slate-800 hover:bg-black text-white px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-md active:scale-95"
+                        >
+                            Submit Exam
+                        </button>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto mt-8 px-4">
+                        <div className="flex flex-wrap gap-2 mb-8 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+                            {examData.map((sheet, index) => (
+                                <button
+                                    key={sheet.id}
+                                    onClick={() => setActiveSheet(index)}
+                                    className={`flex-1 min-w-[120px] flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium transition-all ${activeSheet === index ? 'tab-active' : 'text-slate-600 hover:bg-slate-50'}`}
+                                >
+                                    <Icon name={sheet.icon} className="w-4 h-4" />
+                                    <span className="text-sm">{sheet.title}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="space-y-6 pb-24">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-bold text-slate-800">{currentSheet.title}</h3>
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                    Section {activeSheet + 1} of {examData.length}
+                                </div>
+                            </div>
+
+                            {currentSheet.questions.map((q, idx) => {
+                                const state = responses[q.id] || {};
+                                return (
+                                    <div key={q.id} className={`bg-white rounded-2xl p-6 border transition-all ${state.locked ? 'opacity-80 border-slate-200 bg-slate-50/50' : 'border-white shadow-xl shadow-slate-200/50'}`}>
+                                        <div className="flex justify-between items-start mb-4 gap-4">
+                                            <div className="flex gap-4">
+                                                <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-sm">
+                                                    {idx + 1}
+                                                </span>
+                                                <h4 className="text-lg font-semibold text-slate-800 pt-1 leading-snug">{q.text}</h4>
+                                            </div>
+                                            <span className="flex-shrink-0 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                                {q.marks}M
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-12">
+                                            {q.options.map((option, oIdx) => (
+                                                <button
+                                                    key={oIdx}
+                                                    disabled={state.locked}
+                                                    onClick={() => handleAnswerSelection(q, oIdx)}
+                                                    className={`text-left px-4 py-3 rounded-xl border-2 transition-all flex items-center justify-between
+                                                        ${state.selected === oIdx ? 'border-blue-500 bg-blue-50' : 'border-slate-50 hover:border-slate-200 hover:bg-slate-50'}
+                                                        ${state.locked && state.selected === oIdx ? (state.isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50') : ''}
+                                                    `}
+                                                >
+                                                    <span className="font-medium text-slate-700">{option}</span>
+                                                    {state.locked && state.selected === oIdx && (
+                                                        state.isCorrect ? 
+                                                        <Icon name="CheckCircle2" className="w-5 h-5 text-green-600" /> : 
+                                                        <Icon name="AlertCircle" className="w-5 h-5 text-red-600" />
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="mt-4 pl-12 flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex gap-1">
+                                                    {[1, 2, 3].map(dot => (
+                                                        <div 
+                                                            key={dot} 
+                                                            className={`w-2 h-2 rounded-full ${state.attempts >= dot ? (state.isCorrect ? 'bg-green-500' : 'bg-red-500') : 'bg-slate-200'}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                                    Attempts: {state.attempts}/3
+                                                </span>
+                                            </div>
+                                            {state.locked && (
+                                                <span className={`text-[10px] font-bold uppercase tracking-widest ${state.isCorrect ? 'text-green-600' : 'text-red-500'}`}>
+                                                    {state.isCorrect ? 'Locked (Correct)' : 'Locked (Max Attempts)'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </main>
+
+                    {/* Navigation Bar */}
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 flex justify-center gap-4">
+                        <button 
+                            disabled={activeSheet === 0}
+                            onClick={() => setActiveSheet(activeSheet - 1)}
+                            className="px-6 py-2 rounded-lg font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all flex items-center gap-2"
+                        >
+                            <Icon name="ChevronLeft" className="w-4 h-4" /> Previous
+                        </button>
+                        <button 
+                            disabled={activeSheet === examData.length - 1}
+                            onClick={() => setActiveSheet(activeSheet + 1)}
+                            className="px-6 py-2 rounded-lg font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all flex items-center gap-2"
+                        >
+                            Next <Icon name="ChevronRight" className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
